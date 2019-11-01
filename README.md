@@ -3,19 +3,19 @@
 
 #### 组件参数
 
-######loadingIcon : ``String`` 
+###### loadingIcon : ``String`` 
 
 加载中显示图标
 
 
 
-######loadingText : ``String`` 
+###### loadingText : ``String`` 
 
 加载中显示的文字
 
 
 
-######callback : ``Object`` 
+###### callback : ``Object`` 
 
 加载回调 ，接受四个函数:
 
@@ -29,13 +29,13 @@
 
 
 
-######reload : ``Boolean``
+###### reload : ``Boolean``
 
 是否使用 ``window.reload`` 如果为true ``postUrl`` 将失效，并使用``window.reload`` 刷新页面
 
 
 
-######postUrl : ``String`` 
+###### postUrl : ``String`` 
 
 下拉刷新时拉取的接口地址
 
@@ -43,7 +43,7 @@
 
 
 
-######delayNum : ``Number`` 
+###### delayNum : ``Number`` 
 
 刷新延迟加载动画，防止刷新一闪而过
 
