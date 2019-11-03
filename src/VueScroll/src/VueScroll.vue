@@ -5,21 +5,24 @@
       <span class="loading-text">{{ loadingPromptText }}</span>
     </div>
     <div class="is-loading" v-show="isLoading">
-      <img :src="isFinish?finishIcon:loadingIcon" alt />
+      <img :src="loadingIcon" alt />
       <span class="loading-text">{{ loadingText }}</span>
+    </div>
+    <div class="is-loading" v-show="isFinish">
+      <img :src="fetchError?errorIcon:successIcon" alt />
+      <span class="loading-text">{{ fetchError?errorText:successText }}</span>
     </div>
     <slot></slot>
   </div>
 </template>
 
 <script>
-
 export default {
   name: "VueScroll",
   props: {
     loadingIcon: {
       type: String,
-      default: "./assets/logo.png"
+      default: "http://img.lanrentuku.com/img/allimg/1212/5-121204193R7.gif"
     },
     loadingText: {
       type: String,
@@ -31,6 +34,22 @@ export default {
     delayNum: {
       type: Number,
       default: 1000
+    },
+    errorIcon: {
+      type: String,
+      default: "https://s2.ax1x.com/2019/11/03/KXnHBV.png"
+    },
+    errorText: {
+      type: String,
+      default: "刷新失败"
+    },
+    successIcon: {
+      type: String,
+      default: "https://s2.ax1x.com/2019/11/03/KXn7n0.png"
+    },
+    successText: {
+      type: String,
+      default: "刷新成功"
     }
   },
   data() {
@@ -44,7 +63,9 @@ export default {
       endText: "松开刷新",
       maxY: 100,
       fetchRes: "",
-      isFinish: false
+      isFinish: false,
+      fetchError: false,
+      isStart: true
     };
   },
   methods: {
@@ -56,6 +77,7 @@ export default {
     },
     touchMove(e) {
       if (!this.canefresh) return;
+      this.isStart && (this.applyCallback('startCallback'),this.isStart = false)
       let touch = e.touches[0];
       this.endY = touch.pageY;
       let nowY = this.endY - this.startY;
@@ -77,58 +99,60 @@ export default {
       if (this.loadingPromptText === "松开刷新") {
         this.isLoading = true;
         document.getElementsByTagName("body")[0].style.paddingTop = "0px";
+        this.applyCallback("isLoadingCallback");
         this.canefresh = false;
         if (this.reload === false && this.postUrl) {
           this.fetchRes = await this.fetchData();
-          if (this.fetchRes !== "") {
-            setTimeout(() => {
-              this.isLoading = false;
-              this.$emit("getFetchRes", this.fetchRes);
-            }, this.delayNum);
+          if (this.fetchRes !== "" && this.fetchRes !== undefined) {
+            this.fetchFinish(false);
+          } else if (this.fetchRes === "" && this.fetchRes === undefined) {
+            this.fetchFinish(true);
           }
         } else if (this.reload === true) {
           setTimeout(() => {
             this.isLoading = false;
           }, this.delayNum);
-          // if (
-          //   this.callback.loadingEndCallback !== undefined &&
-          //   this.callback.loadingEndCallback instanceof Function
-          // ) {
-          //   this.callback.loadingEndCallback();
-          // }
-          // location.reload()
         }
       } else {
         document.getElementsByTagName("body")[0].style.paddingTop = "0px";
         this.canefresh = false;
+        this.isStart === false &&
+        (this.applyCallback("cancalLoadingCallback"),
+        this.isStart = true)
       }
     },
     fetchData() {
       return new Promise((resolve, reject) => {
         fetch(this.postUrl)
-          .then(res => {
-            console.log("json()before", res);
-            return res.json();
-          })
-          .then(res => {
-            console.log("json()after", res);
-            return resolve(res);
-          })
+          .then(res => res.json())
+          .then(res => resolve(res))
           .catch(error => {
-            throw new Error(error);
-            return reject(error);
+            return error;
           });
       });
+    },
+    fetchFinish(error) {
+      setTimeout(() => {
+        this.isLoading = false;
+        this.isFinish = true;
+        if (error) {
+          this.fetchError = true;
+        } else {
+          this.fetchError = false;
+          this.$emit("getFetchRes", this.fetchRes);
+        }
+        setTimeout(() => {
+          this.isFinish = false;
+          this.applyCallback("endCallback");
+        }, 1000);
+      }, this.delayNum);
+    },
+    applyCallback(func) {
+      if (this.callback[func] && this.callback[func] instanceof Function) {
+        this.callback[func]();
+      }
     }
   }
-  // created() {
-  //   if (this.loadingIcon === undefined) {
-  //     this.loadingIcon = defaultLoadingIcon;
-  //   }
-  //   if (this.loadingText === undefined) {
-  //     this.loadingText = this.defaultLoadingText;
-  //   }
-  // }
 };
 </script>
 
@@ -143,39 +167,40 @@ export default {
   scroll-behavior: smooth;
 }
 .loading-div {
+  height: 0px;
   display: flex;
   justify-content: center;
   align-items: center;
-  transform: translateY(-40px);
+  transform: translateY(-2.5rem);
 }
 .loading-icon {
-  max-width: 20px;
-  max-height: 20px;
+  max-width: 1.25rem;
+  max-height: 1.25rem;
   vertical-align: middle;
-  margin: 0 10px;
+  margin: 0 0.625rem;
 }
 .loading-text {
-  font-size: 12px;
+  font-size: 0.6rem;
 }
 .is-loading {
-  padding: 10px 0;
+  padding: 0.625rem 0;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 5s;
 }
 .is-loading img {
-  max-width: 20px;
-  max-height: 20px;
+  max-width: 1.25rem;
+  max-height: 1.25rem;
   margin: 0 10px;
-  animation: rotateLoading 3s linear infinite;
+  /* animation: rotateLoading 3s linear infinite; */
 }
-@keyframes rotateLoading {
+/* @keyframes rotateLoading {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
   }
-}
+} */
 </style>
